@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using VRGIN.Core;
@@ -8,68 +7,56 @@ namespace SiHVR.Interpreters
 {
     public class SiHInterpreter : GameInterpreter
     {
-
-        private HashSet<Camera> _checkedCameras = new();
-        private List<Camera> _adjustCameras = new();
-
+        private readonly List<Camera> _adjustCameras = new();
         private readonly Quaternion _uiRotationFix = Quaternion.identity;
 
         public bool CanInterpret() => false;
+
         protected override void OnStart()
         {
             SceneManager.sceneLoaded += OnSceneLoaded;
             VRLog.Info("[SiHInterpreter] Interpreter started.");
 
-            if (VR.Camera != null && VR.Camera.GetComponent<Camera>() != null)
+            var vrCam = VR.Camera?.GetComponent<Camera>();
+            if (vrCam != null)
             {
-                VRLog.Info($"[SiHInterpreter] VRGIN camera is '{VR.Camera.GetComponent<Camera>().name}'");
+                VRLog.Info($"[SiHInterpreter] VRGIN camera is '{vrCam.name}'");
             }
             else
             {
                 VRLog.Warn("[SiHInterpreter] VRGIN camera is null or missing Camera component!");
             }
+
+            // Do NOT manually copy any cameras here.
         }
 
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             VRLog.Info($"[SiHInterpreter] Scene loaded: {scene.name}");
-            _checkedCameras.Clear();
             _adjustCameras.Clear();
         }
 
         protected override void OnUpdate()
         {
-            foreach (var cam in Camera.allCameras.Except(_checkedCameras).ToList())
+            foreach (var cam in Camera.allCameras)
             {
-                _checkedCameras.Add(cam);
+                if (cam == null) continue;
 
-                // Skip the VRGIN camera
-                if (cam == VR.Camera.GetComponent<Camera>()) continue;
+                string source = "Unknown";
+                if (cam == VR.Camera.GetComponent<Camera>())
+                    source = "VRGIN Camera";
+                else if (VRGUI.Instance.IsInterested(cam))
+                    source = "GUI Camera";
+                else if (cam.name.Contains("Camera_Main"))
+                    source = "Main Camera";
+                else if (cam.name.Contains("HDR") || cam.name.Contains("xyz"))
+                    source = "Effect/Overlay Camera";
 
-                // Skip any camera VRGUI is interested in (it's needed for VRGIN's UI)
-                if (VRGUI.Instance.IsInterested(cam)) continue;
-
-                // Already has disabler? Skip
-                if (!cam.gameObject.GetComponent<CameraDisabler>())
-                {
-                    cam.gameObject.AddComponent<CameraDisabler>();
-                }
-
-                // Also do GUI rotation fix
-                if (VRGUI.Instance.IsInterested(cam))
-                {
-                    VRLog.Info($"[SiHInterpreter] GUI Camera detected: {cam.name} — applying rotation fix");
-                    _adjustCameras.Add(cam);
-                }
-            }
-
-
-            foreach (var cam in _adjustCameras)
-            {
-                cam.transform.rotation = _uiRotationFix;
+                VRPlugin.Logger.LogInfo($"[CameraDebug] {cam.name} - enabled: {cam.enabled}, active: {cam.gameObject.activeInHierarchy}, tag: {cam.tag}, source: {source}");
             }
         }
+
 
         private void OnDisable()
         {

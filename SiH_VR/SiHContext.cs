@@ -48,9 +48,9 @@ namespace SiHVR
 
 
         [XmlIgnore] public IMaterialPalette Materials => _materials;
-        [XmlIgnore] public VRSettings Settings => _settings;
         [XmlIgnore] public Type VoiceCommandType => typeof(VoiceCommand);
 
+        public VRSettings Settings => _settings;
         public bool ConfineMouse { get; set; }
         public bool EnforceDefaultGUIMaterials { get; set; }
         public bool GUIAlternativeSortingMode { get; set; }

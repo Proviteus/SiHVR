@@ -13,27 +13,28 @@ namespace SiHVR
         protected override void OnStart()
         {
             base.OnStart();
+            VRPlugin.Logger.LogInfo("[SiHSeatedMode] Started seated VR mode");
 
-            if (Camera.main != null)
+            // Force perspective camera
+            if (Camera.main != null && Camera.main.orthographic)
             {
                 Camera.main.orthographic = false;
-                VRPlugin.Logger.LogInfo("Forced Camera.main.orthographic = false");
+                VRPlugin.Logger.LogInfo("[SiHSeatedMode] Forced Camera.main to perspective");
             }
 
-            if (VR.Camera != null)
+            var vrCam = VR.Camera?.GetComponent<Camera>();
+            if (vrCam != null && vrCam.orthographic)
             {
-                var cam = VR.Camera.GetComponent<Camera>();
-                if (cam != null)
-                {
-                    cam.orthographic = false;
-                    VRPlugin.Logger.LogInfo("Forced VR.Camera.GetComponent<Camera>().orthographic = false");
-                }
+                vrCam.orthographic = false;
+                VRPlugin.Logger.LogInfo("[SiHSeatedMode] Forced VR.Camera to perspective");
             }
+
+            // Recenter the view at startup
+            Recenter();
         }
 
         protected override IEnumerable<IShortcut> CreateShortcuts()
         {
-            // Optional debug shortcut: Ctrl+C twice to switch to standing mode
             return base.CreateShortcuts().Concat(new IShortcut[]
             {
                 new MultiKeyboardShortcut(
@@ -44,19 +45,10 @@ namespace SiHVR
             });
         }
 
-        /// <summary>
-        /// Prevents VRGIN from creating controller objects.
-        /// This avoids errors in OpenXR when no controllers are connected.
-        /// </summary>
         protected override void CreateControllers()
         {
-            // Intentionally left blank to disable controller creation
+            // Skip creating controllers for seated mode
         }
 
-        // Optional: uncomment to auto-switch to standing if controllers are detected
-        // protected override void ChangeModeOnControllersDetected()
-        // {
-        //     VR.Manager.SetMode<SiHStandingMode>();
-        // }
     }
 }

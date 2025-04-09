@@ -178,15 +178,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CameraDisabler.cs" />
     <Compile Include="SiHContext.cs" />
     <Compile Include="SiHInterpreter.cs" />
     <Compile Include="SiHSeatedMode.cs" />
     <Compile Include="SiHStandingMode.cs" />
-    <Compile Include="VRManagerPatch.cs" />
     <Compile Include="VRPlugin.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Cameras\" />
+    <Folder Include="Patches\" />
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
