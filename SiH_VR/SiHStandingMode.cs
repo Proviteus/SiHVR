@@ -11,14 +11,8 @@ namespace SiHVR
     {
         protected override IEnumerable<IShortcut> CreateShortcuts()
         {
-            // Optional: Ctrl+C to switch back to seated mode
-            return base.CreateShortcuts().Concat(new IShortcut[]
-            {
-                new MultiKeyboardShortcut(
-                    new KeyStroke("Ctrl+C"),
-                    new KeyStroke("Ctrl+C"),
-                    () => { VR.Manager.SetMode<SiHSeatedMode>(); }
-                )
+            return base.CreateShortcuts().Concat(new IShortcut[] {
+                new MultiKeyboardShortcut(new KeyStroke("Ctrl+C"), new KeyStroke("Ctrl+C"), () => { VR.Manager.SetMode<SiHSeatedMode>(); })
             });
         }
     }

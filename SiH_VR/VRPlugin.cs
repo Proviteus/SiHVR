@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Runtime.InteropServices;
+using System.Linq;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -11,6 +12,7 @@ using UnityEngine.VR;
 using Valve.VR;
 using VRGIN.Core;
 using VRGIN.Helpers;
+using System.IO;
 
 namespace SiHVR
 {
@@ -27,6 +29,21 @@ namespace SiHVR
         {
             Logger = base.Logger;
 
+            // Apply Harmony patches (auto-patch everything)
+            PatchLoader.ApplyPatches();
+            Logger.LogInfo("Harmony patches applied.");
+
+            // Check for --vr argument
+            if (Environment.CommandLine.Contains("--vr"))
+            );
+
+            Shortcut_ToggleMode = Config.Bind(
+                "Shortcuts",
+                "Toggle Mode",
+                new KeyboardShortcut(KeyCode.C, KeyCode.LeftControl),
+                "Hotkey to switch between seated and standing VR modes (press twice)."
+            );
+
             bool enabled = Environment.CommandLine.Contains("--vr");
             if (enabled)
             {
@@ -39,6 +56,7 @@ namespace SiHVR
                 Logger.LogInfo("VR mode not enabled.");
             }
         }
+
 
         private IEnumerator InitializeOpenVR()
         {
@@ -76,27 +94,55 @@ namespace SiHVR
                 Logger.LogError("SteamVR initialization failed:");
                 Logger.LogError(ex);
                 yield break;
+
+            var cam = VR.Camera.GetComponent<Camera>();
+            if (cam)
+            {
+                VRLog.Info($"[Sanity] VRGIN Camera is {cam.name}, stereo: {cam.stereoEnabled}, target eye: {cam.stereoTargetEye}");
+            }
+            Logger.LogInfo("VRManager created.");
+            VR.Manager.SetMode<SiHSeatedMode>();
+            if (!File.Exists(Path.Combine(Paths.ConfigPath, "VRSettings.xml")))
+            {
+                VR.Settings.Save();
+                Logger.LogInfo("Generated new VRSettings.xml with default shortcuts.");
             }
 
-            Logger.LogInfo("OpenVR and SteamVR initialized successfully!");
 
-            Logger.LogInfo("Initializing VRGIN...");
-            new Harmony(GUID).PatchAll(typeof(VRPlugin).Assembly);
-
-            VRManager.Create<SiHInterpreter>(new SiHContext());
-
-            // Optional: NearClip/IPD bindings here
-            // VR.Settings.AddListener("IPDScale", (_, __) => ... );
-
-            VR.Manager.SetMode<SiHSeatedMode>();
-
-            // Optional: Create fade
-            //VRFade.Create();
-
-            // Optional: Extra safety
             NativeMethods.DisableProcessWindowsGhosting();
 
             Logger.LogInfo("SiHVR loaded and ready.");
+        private void Update()
+        {
+            // Handle config-based shortcuts
+            if (Shortcut_ResetView.Value.IsDown())
+            {
+                VR.Camera.GetComponent<VRCamera>().Reset();
+                Logger.LogInfo("[Shortcut] ResetView triggered");
+            }
+
+            if (Shortcut_ToggleMode.Value.IsDown())
+            {
+                // Toggle seated <-> standing (can replace logic later)
+                if (VR.Manager.Mode is SiHSeatedMode)
+                {
+                    VR.Manager.SetMode<SiHStandingMode>();
+                    Logger.LogInfo("[Shortcut] Toggled to StandingMode");
+                }
+                else
+                {
+                    VR.Manager.SetMode<SiHSeatedMode>();
+                    Logger.LogInfo("[Shortcut] Toggled to SeatedMode");
+                }
+            }
+        }
+
+        public void OnFixedUpdate()
+        {
+        }
+
+        public void OnLateUpdate()
+        {
         }
 
         private static class NativeMethods

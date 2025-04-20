@@ -148,6 +148,9 @@
     <Reference Include="UnityEngine.SpatialTracking">
       <HintPath>..\VRGIN_OpenXR\Libs\UnityEngine.SpatialTracking.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.SubsystemsModule">
+      <HintPath>..\Libs\UnityEngine.SubsystemsModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UI.2019.4.9\lib\net46\UnityEngine.UI.dll</HintPath>
       <Private>False</Private>
@@ -170,6 +173,9 @@
     <Reference Include="UnityEngine.XR.LegacyInputHelpers">
       <HintPath>..\VRGIN_OpenXR\Libs\UnityEngine.XR.LegacyInputHelpers.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.XRModule">
+      <HintPath>..\Libs\UnityEngine.XRModule.dll</HintPath>
+    </Reference>
     <Reference Include="Valve.Newtonsoft.Json">
       <HintPath>..\VRGIN_OpenXR\Libs\Valve.Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -178,15 +184,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CameraDisabler.cs" />
+    <Compile Include="PatchLoader.cs" />
+    <Compile Include="Patches\Patch_SteamVR_Render.cs" />
     <Compile Include="SiHContext.cs" />
     <Compile Include="SiHInterpreter.cs" />
     <Compile Include="SiHSeatedMode.cs" />
     <Compile Include="SiHStandingMode.cs" />
-    <Compile Include="VRManagerPatch.cs" />
     <Compile Include="VRPlugin.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Cameras\" />
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
@@ -201,8 +208,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <PropertyGroup>
-    <PostBuildEvent>IF EXIST "$(SolutionDir)PostBuild.bat" CALL "$(SolutionDir)PostBuild.bat" "$(TargetDir)\SiH_MainGameVR.dll"
-</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.Unity.Analyzers.1.18.0\analyzers\dotnet\cs\Microsoft.Unity.Analyzers.dll" />

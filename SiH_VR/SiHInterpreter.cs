@@ -1,80 +1,66 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-using UnityEngine.SceneManagement;
+﻿using UnityEngine;
 using VRGIN.Core;
+using UnityEngine.SceneManagement;
+using System.Collections.Generic;
+using System.Linq;
+using Valve.VR;
 
 namespace SiHVR.Interpreters
 {
+    // ゲーム特有の処理を実装する.
     public class SiHInterpreter : GameInterpreter
     {
+        private HashSet<Camera> _CheckedCameras = new HashSet<Camera>();
+        private List<Camera> _AdjustCamera = new List<Camera>();
 
-        private HashSet<Camera> _checkedCameras = new();
-        private List<Camera> _adjustCameras = new();
+        Quaternion RotAdjust = new Quaternion(0f, 0f, 0f, 0f);
 
-        private readonly Quaternion _uiRotationFix = Quaternion.identity;
-
-        public bool CanInterpret() => false;
-        protected override void OnStart()
-        {
-            SceneManager.sceneLoaded += OnSceneLoaded;
-            VRLog.Info("[SiHInterpreter] Interpreter started.");
-
-            if (VR.Camera != null && VR.Camera.GetComponent<Camera>() != null)
-            {
-                VRLog.Info($"[SiHInterpreter] VRGIN camera is '{VR.Camera.GetComponent<Camera>().name}'");
-            }
-            else
-            {
-                VRLog.Warn("[SiHInterpreter] VRGIN camera is null or missing Camera component!");
-            }
-        }
-
-
-        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-        {
-            VRLog.Info($"[SiHInterpreter] Scene loaded: {scene.name}");
-            _checkedCameras.Clear();
-            _adjustCameras.Clear();
-        }
-
+        // GUIカメラの歪む問題補正.
         protected override void OnUpdate()
         {
-            foreach (var cam in Camera.allCameras.Except(_checkedCameras).ToList())
+            base.OnUpdate();
+
+            // Find new GUI Camera.
+            foreach (var camera in Camera.allCameras.Except(_CheckedCameras).ToList())
             {
-                _checkedCameras.Add(cam);
-
-                // Skip the VRGIN camera
-                if (cam == VR.Camera.GetComponent<Camera>()) continue;
-
-                // Skip any camera VRGUI is interested in (it's needed for VRGIN's UI)
-                if (VRGUI.Instance.IsInterested(cam)) continue;
-
-                // Already has disabler? Skip
-                if (!cam.gameObject.GetComponent<CameraDisabler>())
+                _CheckedCameras.Add(camera);
+                if (VRGUI.Instance.IsInterested(camera))
                 {
-                    cam.gameObject.AddComponent<CameraDisabler>();
-                }
-
-                // Also do GUI rotation fix
-                if (VRGUI.Instance.IsInterested(cam))
-                {
-                    VRLog.Info($"[SiHInterpreter] GUI Camera detected: {cam.name} — applying rotation fix");
-                    _adjustCameras.Add(cam);
+                    VRLog.Info("Detected GUI camera ( {0} ) Adjusting Start", camera.name);
+                    _AdjustCamera.Add(camera);
                 }
             }
 
-
-            foreach (var cam in _adjustCameras)
+            // Adjust Camera
+            foreach (var camera in _AdjustCamera)
             {
-                cam.transform.rotation = _uiRotationFix;
+                camera.transform.rotation = RotAdjust;
             }
         }
 
-        private void OnDisable()
+        protected void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        protected void OnDisable()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
-            VRLog.Info("[SiHInterpreter] Interpreter disabled.");
         }
+
+        protected void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            _CheckedCameras.Clear();
+            _AdjustCamera.Clear();
+
+            // Find and destroy SteamVR_Render
+            var render = GameObject.FindObjectOfType<SteamVR_Render>();
+            if (render)
+            {
+                VRLog.Info("Destroying SteamVR_Render to prevent flickering.");
+                GameObject.Destroy(render);
+            }
+        }
+
     }
 }

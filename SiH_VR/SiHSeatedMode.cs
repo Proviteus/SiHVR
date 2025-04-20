@@ -2,6 +2,7 @@
 using System.Linq;
 using UnityEngine;
 using VRGIN.Controls;
+using VRGIN.Controls.Tools;
 using VRGIN.Core;
 using VRGIN.Helpers;
 using VRGIN.Modes;
@@ -10,53 +11,47 @@ namespace SiHVR
 {
     public class SiHSeatedMode : SeatedMode
     {
-        protected override void OnStart()
-        {
-            base.OnStart();
-
-            if (Camera.main != null)
-            {
-                Camera.main.orthographic = false;
-                VRPlugin.Logger.LogInfo("Forced Camera.main.orthographic = false");
-            }
-
-            if (VR.Camera != null)
-            {
-                var cam = VR.Camera.GetComponent<Camera>();
-                if (cam != null)
-                {
-                    cam.orthographic = false;
-                    VRPlugin.Logger.LogInfo("Forced VR.Camera.GetComponent<Camera>().orthographic = false");
-                }
-            }
-        }
-
         protected override IEnumerable<IShortcut> CreateShortcuts()
         {
-            // Optional debug shortcut: Ctrl+C twice to switch to standing mode
             return base.CreateShortcuts().Concat(new IShortcut[]
-            {
-                new MultiKeyboardShortcut(
-                    new KeyStroke("Ctrl+C"),
-                    new KeyStroke("Ctrl+C"),
-                    () => VR.Manager.SetMode<SiHStandingMode>()
-                )
+            // Force perspective camera
+                new MultiKeyboardShortcut(new KeyStroke("Ctrl+C"), new KeyStroke("Ctrl+C"), () => { VR.Manager.SetMode<SiHStandingMode>(); })
             });
         }
-
+                VRPlugin.Logger.LogInfo("[SiHSeatedMode] Forced Camera.main to perspective");
         /// <summary>
-        /// Prevents VRGIN from creating controller objects.
-        /// This avoids errors in OpenXR when no controllers are connected.
+        /// Disables controllers for seated mode.
         /// </summary>
         protected override void CreateControllers()
         {
-            // Intentionally left blank to disable controller creation
         }
 
-        // Optional: uncomment to auto-switch to standing if controllers are detected
-        // protected override void ChangeModeOnControllersDetected()
-        // {
-        //     VR.Manager.SetMode<SiHStandingMode>();
-        // }
+        protected override void OnUpdate()
+
+            if (VR.Camera?.SteamCam?.head == null)
+
+            return base.CreateShortcuts().Concat(new IShortcut[]
+
+            return base.CreateShortcuts().Concat(new IShortcut[]
+
+            base.OnUpdate(); // Run ControlMode.OnUpdate()
+        {
+            // Skip creating controllers for seated mode
+
+        /// <summary>
+        /// Uncomment to automatically switch into Standing Mode when controllers have been detected.
+        /// </summary>
+        //protected override void ChangeModeOnControllersDetected()
+        //{
+        //    VR.Manager.SetMode<GenericStandingMode>();
+        //}
+        {
+            // Skip creating controllers for seated mode
+        {
+            // Skip creating controllers for seated mode
+        {
+            // Skip creating controllers for seated mode
+        }
+
     }
 }

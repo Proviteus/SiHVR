@@ -25,7 +25,7 @@ namespace SiHVR
             // IPDのデフォルトを10に設定(巨人化防止)
             if (isNew)
             {
-                _settings.IPDScale = 10f;
+                _settings.IPDScale = 1f;
                 _settings.Save();
             }
             // Runtime defaults
@@ -42,7 +42,7 @@ namespace SiHVR
             UILayer = "UI";
             UILayerMask = LayerMask.GetMask(UILayer);
             UnitToMeter = 1f;
-            NearClipPlane = 0.1f;
+            NearClipPlane = 0.01f;
             PreferredGUI = GUIType.uGUI;
         }
 
