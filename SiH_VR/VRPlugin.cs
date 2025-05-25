@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections;
 using System.Runtime.InteropServices;
-using System.Linq;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 using SiHVR.Interpreters;
 using Unity.XR.OpenVR;
 using UnityEngine;
-using UnityEngine.VR;
 using Valve.VR;
 using VRGIN.Core;
 using VRGIN.Helpers;
-using System.IO;
 
 namespace SiHVR
 {
@@ -29,30 +26,26 @@ namespace SiHVR
         {
             Logger = base.Logger;
 
-            // Apply Harmony patches (auto-patch everything)
             PatchLoader.ApplyPatches();
             Logger.LogInfo("Harmony patches applied.");
 
-            // Check for --vr argument
             if (Environment.CommandLine.Contains("--vr"))
             {
-                Logger.LogInfo("VR mode enabled, starting initialization...");
-                //BepInExVrLogBackend.ApplyYourself();
-                StartCoroutine(InitializeOpenVR());
+                Logger.LogInfo("VR Mode detected, initializing...");
+                StartCoroutine(InitializeVR());
             }
             else
             {
-                Logger.LogInfo("VR mode not enabled.");
+                Logger.LogInfo("VR Mode not enabled.");
             }
         }
 
-
-        private IEnumerator InitializeOpenVR()
+        private IEnumerator InitializeVR()
         {
-            Logger.LogInfo("Waiting for scene manager to initialize...");
+            Logger.LogInfo("Waiting for scene to load...");
             yield return new WaitUntil(() => UnityEngine.SceneManagement.SceneManager.GetActiveScene().isLoaded);
 
-            Logger.LogInfo("Initializing OpenVR runtime...");
+            Logger.LogInfo("Initializing OpenVR...");
             var ovrSettings = OpenVRSettings.GetSettings(true);
             ovrSettings.StereoRenderingMode = OpenVRSettings.StereoRenderingModes.MultiPass;
             ovrSettings.InitializationType = OpenVRSettings.InitializationTypes.Scene;
@@ -62,15 +55,9 @@ namespace SiHVR
             SteamVR_Settings.instance.editorAppKey = "summerinheat.vr";
 
             var openVRLoader = ScriptableObject.CreateInstance<OpenVRLoader>();
-            if (!openVRLoader.Initialize())
+            if (!openVRLoader.Initialize() || !openVRLoader.Start())
             {
-                Logger.LogError("Failed to initialize OpenVR.");
-                yield break;
-            }
-
-            if (!openVRLoader.Start())
-            {
-                Logger.LogError("Failed to start OpenVR.");
+                Logger.LogError("Failed to initialize or start OpenVR.");
                 yield break;
             }
 
@@ -83,47 +70,14 @@ namespace SiHVR
                 Logger.LogError("SteamVR initialization failed:");
                 Logger.LogError(ex);
                 yield break;
-
-            var cam = VR.Camera.GetComponent<Camera>();
-            if (cam)
-            {
-                VRLog.Info($"[Sanity] VRGIN Camera is {cam.name}, stereo: {cam.stereoEnabled}, target eye: {cam.stereoTargetEye}");
-            }
-            Logger.LogInfo("VRManager created.");
-            VR.Manager.SetMode<SiHSeatedMode>();
-            if (!File.Exists(Path.Combine(Paths.ConfigPath, "VRSettings.xml")))
-            {
-                VR.Settings.Save();
-                Logger.LogInfo("Generated new VRSettings.xml with default shortcuts.");
             }
 
-            Logger.LogInfo("OpenVR and SteamVR initialized successfully!");
+            Logger.LogInfo("OpenVR and SteamVR initialized!");
 
-            Logger.LogInfo("Initializing VRGIN...");
             VRManager.Create<SiHInterpreter>(new SiHContext());
-            Logger.LogInfo("VRManager created.");
-            Logger.LogInfo($"VR Mode: {VR.Manager.Mode?.GetType().Name}");
-            Logger.LogInfo($"VR Camera: {VR.Camera?.name}");
-            Logger.LogInfo($"VR Camera Parent: {VR.Camera?.transform.parent?.name}");
-
-
-            var cam = VR.Camera.GetComponent<Camera>();
-            if (cam)
-            {
-                VRLog.Info($"[Sanity] VRGIN Camera is {cam.name}, stereo: {cam.stereoEnabled}, target eye: {cam.stereoTargetEye}");
-            }
-
             VR.Manager.SetMode<SiHSeatedMode>();
-            if (!File.Exists(Path.Combine(Paths.ConfigPath, "VRSettings.xml")))
-            {
-                VR.Settings.Save();
-                Logger.LogInfo("Generated new VRSettings.xml with default shortcuts.");
-            }
 
-
-            NativeMethods.DisableProcessWindowsGhosting();
-
-            Logger.LogInfo("SiHVR loaded and ready.");
+            Logger.LogInfo("VRManager initialized and SeatedMode set.");
         }
 
         private static class NativeMethods

@@ -15,5 +15,7 @@ namespace SiHVR
                 new MultiKeyboardShortcut(new KeyStroke("Ctrl+C"), new KeyStroke("Ctrl+C"), () => { VR.Manager.SetMode<SiHSeatedMode>(); })
             });
         }
+
+
     }
 }

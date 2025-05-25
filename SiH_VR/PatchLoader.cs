@@ -1,6 +1,4 @@
 ﻿using HarmonyLib;
-using BepInEx;
-using VRGIN.Core;
 
 namespace SiHVR
 {

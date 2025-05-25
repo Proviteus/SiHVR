@@ -37,13 +37,12 @@ namespace SiHVR
             base.OnUpdate(); // Run ControlMode.OnUpdate()
         }
 
-
         /// <summary>
         /// Uncomment to automatically switch into Standing Mode when controllers have been detected.
         /// </summary>
-        //protected override void ChangeModeOnControllersDetected()
-        //{
-        //    VR.Manager.SetMode<GenericStandingMode>();
-        //}
+        protected override void ChangeModeOnControllersDetected()
+        {
+            VR.Manager.SetMode<SiHStandingMode>();
+        }
     }
 }
