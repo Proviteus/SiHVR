@@ -35,17 +35,6 @@ namespace SiHVR
 
             // Check for --vr argument
             if (Environment.CommandLine.Contains("--vr"))
-            );
-
-            Shortcut_ToggleMode = Config.Bind(
-                "Shortcuts",
-                "Toggle Mode",
-                new KeyboardShortcut(KeyCode.C, KeyCode.LeftControl),
-                "Hotkey to switch between seated and standing VR modes (press twice)."
-            );
-
-            bool enabled = Environment.CommandLine.Contains("--vr");
-            if (enabled)
             {
                 Logger.LogInfo("VR mode enabled, starting initialization...");
                 //BepInExVrLogBackend.ApplyYourself();
@@ -108,41 +97,33 @@ namespace SiHVR
                 Logger.LogInfo("Generated new VRSettings.xml with default shortcuts.");
             }
 
+            Logger.LogInfo("OpenVR and SteamVR initialized successfully!");
+
+            Logger.LogInfo("Initializing VRGIN...");
+            VRManager.Create<SiHInterpreter>(new SiHContext());
+            Logger.LogInfo("VRManager created.");
+            Logger.LogInfo($"VR Mode: {VR.Manager.Mode?.GetType().Name}");
+            Logger.LogInfo($"VR Camera: {VR.Camera?.name}");
+            Logger.LogInfo($"VR Camera Parent: {VR.Camera?.transform.parent?.name}");
+
+
+            var cam = VR.Camera.GetComponent<Camera>();
+            if (cam)
+            {
+                VRLog.Info($"[Sanity] VRGIN Camera is {cam.name}, stereo: {cam.stereoEnabled}, target eye: {cam.stereoTargetEye}");
+            }
+
+            VR.Manager.SetMode<SiHSeatedMode>();
+            if (!File.Exists(Path.Combine(Paths.ConfigPath, "VRSettings.xml")))
+            {
+                VR.Settings.Save();
+                Logger.LogInfo("Generated new VRSettings.xml with default shortcuts.");
+            }
+
 
             NativeMethods.DisableProcessWindowsGhosting();
 
             Logger.LogInfo("SiHVR loaded and ready.");
-        private void Update()
-        {
-            // Handle config-based shortcuts
-            if (Shortcut_ResetView.Value.IsDown())
-            {
-                VR.Camera.GetComponent<VRCamera>().Reset();
-                Logger.LogInfo("[Shortcut] ResetView triggered");
-            }
-
-            if (Shortcut_ToggleMode.Value.IsDown())
-            {
-                // Toggle seated <-> standing (can replace logic later)
-                if (VR.Manager.Mode is SiHSeatedMode)
-                {
-                    VR.Manager.SetMode<SiHStandingMode>();
-                    Logger.LogInfo("[Shortcut] Toggled to StandingMode");
-                }
-                else
-                {
-                    VR.Manager.SetMode<SiHSeatedMode>();
-                    Logger.LogInfo("[Shortcut] Toggled to SeatedMode");
-                }
-            }
-        }
-
-        public void OnFixedUpdate()
-        {
-        }
-
-        public void OnLateUpdate()
-        {
         }
 
         private static class NativeMethods

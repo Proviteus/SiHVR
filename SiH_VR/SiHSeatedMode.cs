@@ -14,11 +14,11 @@ namespace SiHVR
         protected override IEnumerable<IShortcut> CreateShortcuts()
         {
             return base.CreateShortcuts().Concat(new IShortcut[]
-            // Force perspective camera
+            {
                 new MultiKeyboardShortcut(new KeyStroke("Ctrl+C"), new KeyStroke("Ctrl+C"), () => { VR.Manager.SetMode<SiHStandingMode>(); })
             });
         }
-                VRPlugin.Logger.LogInfo("[SiHSeatedMode] Forced Camera.main to perspective");
+
         /// <summary>
         /// Disables controllers for seated mode.
         /// </summary>
@@ -27,16 +27,16 @@ namespace SiHVR
         }
 
         protected override void OnUpdate()
-
+        {
             if (VR.Camera?.SteamCam?.head == null)
-
-            return base.CreateShortcuts().Concat(new IShortcut[]
-
-            return base.CreateShortcuts().Concat(new IShortcut[]
+            {
+                VRLog.Warn("Skipping SeatedMode.OnUpdate due to missing VR.Camera.SteamCam.head");
+                return;
+            }
 
             base.OnUpdate(); // Run ControlMode.OnUpdate()
-        {
-            // Skip creating controllers for seated mode
+        }
+
 
         /// <summary>
         /// Uncomment to automatically switch into Standing Mode when controllers have been detected.
@@ -45,13 +45,5 @@ namespace SiHVR
         //{
         //    VR.Manager.SetMode<GenericStandingMode>();
         //}
-        {
-            // Skip creating controllers for seated mode
-        {
-            // Skip creating controllers for seated mode
-        {
-            // Skip creating controllers for seated mode
-        }
-
     }
 }
